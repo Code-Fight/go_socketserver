@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"os"
 	"socketserver/business"
 	"socketserver/socket"
 	"github.com/Code-Fight/golog"
+	"socketserver/units"
 )
 
 func CheckError(err error) {
@@ -30,11 +32,16 @@ func ErrorOnEvent(conn net.Conn) {
 
 
 func main() {
+	fmt.Println("Server Start!")
+	port:=units.GetPort()
+	fmt.Printf("Port:%s",port)
+
+
 	//初始化日志
 	log.Init("./serverlog",log.DebugLevel,false,log.SetCaller(true))
 
 	//初始化 server
-	netListen, err := net.Listen("tcp", "0.0.0.0:2048")
+	netListen, err := net.Listen("tcp", "0.0.0.0:"+port)
 	CheckError(err)
 	defer netListen.Close()
 	log.Info("Waiting for clients")
