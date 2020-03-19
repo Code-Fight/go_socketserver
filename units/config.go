@@ -1,7 +1,7 @@
 package units
 
 import (
-	"fmt"
+	log "github.com/Code-Fight/golog"
 	"github.com/spf13/viper"
 )
 
@@ -13,8 +13,7 @@ func GetPort() string {
 	viper.AddConfigPath(".")
 	err := viper.ReadInConfig() // Find and read the config file
 	if err != nil { // Handle errors reading the config file
-		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+		log.Errorf("Fatal error config file: %s \n", err)
 	}
-
 	return viper.GetString("port")
 }

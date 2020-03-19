@@ -38,12 +38,15 @@ func main() {
 
 
 	//初始化日志
-	log.Init("./serverlog",log.DebugLevel,false,log.SetCaller(true))
+	//关闭日志压缩
+	//设置日志分割大小为30M
+	log.Init("./server.log",log.DebugLevel,false,log.SetCaller(true),log.SetMaxFileSize(30),log.SetCompress(false))
 
 	//初始化 server
 	netListen, err := net.Listen("tcp", "0.0.0.0:"+port)
 	CheckError(err)
 	defer netListen.Close()
+	fmt.Print("Server Running...")
 	log.Info("Waiting for clients")
 
 	socket.BusOnEvent = BusOnEvent
@@ -56,6 +59,7 @@ func main() {
 		log.Info(conn.RemoteAddr().String(), " tcp connect success")
 		// 如果此链接超过60秒没有发送新的数据，将被关闭
 		// 超时时间 这里需要注意 如果对方不发心跳 可能会被直接关闭
+		// 超时已经关闭 因为目前有的socket客户端并没有遵循发送心跳
 		go socket.HandleConnection(conn, 60)
 	}
 }
