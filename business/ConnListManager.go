@@ -21,8 +21,20 @@ func ConnListDel(conn net.Conn) {
 				socket.SendToAll(0x0000, Common.Cmd_Net_Comm_Status,statusBytes, Common.RECVTASK,0)
 
 				//关闭现有的连接
-				c.CMDConn.Close()
-				c.RECVConn.Close()
+				if c.CMDConn !=nil{
+					cmderr:=c.CMDConn.Close()
+					if cmderr!=nil{
+
+					}
+				}
+
+				if c.RECVConn!=nil{
+					recverr:=c.RECVConn.Close()
+					if recverr!=nil{
+
+					}
+				}
+
 				defer Common.ConnList.Delete(key)
 				return true
 			}
