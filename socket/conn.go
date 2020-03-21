@@ -42,7 +42,7 @@ func (c Conn) ReplyDevId(conn net.Conn, devId uint16) (n int, err error) {
 
 
 // 发送数据给所有在线的客户端
-// 通过goruntine 启动
+// 通过goroutine 启动
 func SendToAll(src uint16,cmd uint16,data []byte,tunnel int,devType uint16)  {
 
 	Common.ConnList.Range(func(key, value interface{}) bool {

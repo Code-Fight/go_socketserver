@@ -23,7 +23,7 @@ func reader(conn net.Conn, readerChannel <-chan []byte, closeChannel <-chan stru
 			BusOnEvent(conn, data,closeChannel)
 			break
 		case _,ok := <-closeChannel:
-			//如果从关闭通道中收到信息，就关闭该goruntine
+			//如果从关闭通道中收到信息，就关闭该goroutine
 			if !ok {
 				return
 			}
@@ -43,7 +43,7 @@ func HandleConnection(conn net.Conn, timeout int) {
 	//声明一个管道用于接收解包的数据
 	readerChannel := make(chan []byte, 16)
 
-	//goruntine关闭线程
+	//goroutine关闭线程
 	closeChannel :=make(chan struct{})
 
 	//实际业务
@@ -64,7 +64,7 @@ func HandleConnection(conn net.Conn, timeout int) {
 			}
 			log.Error(conn.RemoteAddr().String(), " connection error: ", err, reflect.TypeOf(err))
 
-			//关闭reader goruntine
+			//关闭reader goroutine
 			close(closeChannel)
 
 			socketErr(conn)

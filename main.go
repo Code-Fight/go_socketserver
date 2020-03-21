@@ -24,7 +24,7 @@ func BusOnEvent(conn net.Conn,data []byte,closeChannel <-chan struct{})  {
 }
 
 // 处理socket err
-// 关闭所有相关的goruntine
+// 关闭所有相关的gorottine
 // 从在线列表中删除掉该设备
 func ErrorOnEvent(conn net.Conn) {
 	business.ConnListDel(conn)
