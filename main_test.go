@@ -1,15 +1,18 @@
 package main
 
 import (
-	"strconv"
+	"net"
+	"sync"
 	"testing"
 )
 
 func TestTemp(t *testing.T) {
+	a:= sync.Map{}
+	b:= sync.Map{}
 
-	a,_:=strconv.ParseUint("CSQ",128,16)
+	b.Store("a",net.Conn(nil))
+	a.Store(1,b)
 
-	//i :=units.StringToBytesWithWidechar("192.168.102.100")
 
-	t.Logf("%d",a)
+
 }

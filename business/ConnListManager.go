@@ -31,7 +31,7 @@ func ConnListDel(conn net.Conn) {
 
 				//下线通知
 				statusBytes := GenDevStatusBytes(uint32(c.DevId),uint32(c.DevType),0,strings.Split(conn.RemoteAddr().String(),":")[0])
-				socket.SendToAll(0x0000, Common.Cmd_Net_Comm_Status,statusBytes, Common.RECVTASK,0)
+				go socket.SendToAll(0x0000, Common.Cmd_Net_Comm_Status,statusBytes, Common.RECVTASK,0)
 
 				//关闭现有的连接
 				//if c.CMDConn !=nil{

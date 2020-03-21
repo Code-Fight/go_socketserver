@@ -13,7 +13,7 @@ import (
 )
 
 // 设备注册
-func Reg(conn net.Conn, s *Common.MyProtocol) {
+func Reg(conn net.Conn, s *Common.MyProtocol,closeChannel <-chan struct{}) {
 
 	if units.BytesToSrc(s.Data.Src) == 0xffff {
 		c := socket.Conn{}
@@ -36,7 +36,7 @@ func Reg(conn net.Conn, s *Common.MyProtocol) {
 		c.ReplyDevId(c.RECVConn,c.DevId)
 
 		//给当前连接器一个心跳线程
-		go HeardEvent(c.RECVConn,c.DevId)
+		go HeardEvent(c.RECVConn,c.DevId,closeChannel)
 
 
 		return

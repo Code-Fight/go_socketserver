@@ -17,9 +17,9 @@ func CheckError(err error) {
 	}
 }
 
-func BusOnEvent(conn net.Conn,data []byte)  {
+func BusOnEvent(conn net.Conn,data []byte,closeChannel <-chan struct{})  {
 	log.Debug("rev data from client:"+conn.RemoteAddr().String())
-	business.CMDRoute(conn,data)
+	business.CMDRoute(conn,data,closeChannel)
 
 }
 
@@ -46,7 +46,7 @@ func main() {
 	netListen, err := net.Listen("tcp", "0.0.0.0:"+port)
 	CheckError(err)
 	defer netListen.Close()
-	fmt.Print("Server Running...")
+	fmt.Print("Server Running...\r\n")
 	log.Info("Waiting for clients")
 
 	socket.BusOnEvent = BusOnEvent

@@ -9,8 +9,11 @@ import (
 )
 
 // 命令路由
-func CMDRoute(conn net.Conn, data []byte ) {
+func CMDRoute(conn net.Conn, data []byte ,closeChannel <-chan struct{}) {
 
+	if conn==nil{
+		ConnListDel(conn)
+	}
 	log.Debugf("收到%s 的数据包：%x",conn.RemoteAddr().String(),data)
 	var s = Common.MyProtocol{}
 	s.Decode(data)
@@ -36,7 +39,7 @@ func CMDRoute(conn net.Conn, data []byte ) {
 
 	case Common.Cmd_Login:
 		log.Debug("recv Cmd_Login")
-		Reg(conn,&s)
+		Reg(conn,&s,closeChannel)
 
 	case Common.Cmd_Login_Reply:
 		log.Debug("recv Cmd_Login_Reply [PASS]")
