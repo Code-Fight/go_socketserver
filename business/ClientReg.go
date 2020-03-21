@@ -24,7 +24,9 @@ func Reg(conn net.Conn, s *Common.MyProtocol) {
 		//分配设备号 并创建socket Conn 添加到Clients中
 		_,disOk := distributionID(&c,&conn)
 		if disOk!=nil{
-			conn.Close()
+			if conn!=nil{
+				conn.Close()
+			}
 			log.Error("设备分配过程中失败:"+disOk.Error())
 			return
 		}
@@ -59,7 +61,9 @@ func Reg(conn net.Conn, s *Common.MyProtocol) {
 
 
 		} else {
-			conn.Close()
+			if conn!=nil{
+				conn.Close()
+			}
 			log.Error("设备注册过程中，未找到发送数据相关的接收通道")
 			return
 
@@ -68,7 +72,9 @@ func Reg(conn net.Conn, s *Common.MyProtocol) {
 	} else {
 		// 没有带设备号 并 没有设置来源0xffff的 直接关闭
 		log.Error("设备没有申请设备id，以及设备未注册到clients中")
-		conn.Close()
+		if conn!=nil{
+			conn.Close()
+		}
 		return
 	}
 

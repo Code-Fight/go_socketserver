@@ -17,6 +17,7 @@
 
 # log
 *.log
+log
 
 #.DS_Store
 .DS_Store

@@ -34,13 +34,13 @@ func ErrorOnEvent(conn net.Conn) {
 func main() {
 	fmt.Println("Server Start!")
 	port:=units.GetPort()
-	fmt.Printf("Port:%s",port)
+	fmt.Printf("Port:%s \r\n",port)
 
 
 	//初始化日志
 	//关闭日志压缩
 	//设置日志分割大小为30M
-	log.Init("./server.log",log.DebugLevel,false,log.SetCaller(true),log.SetMaxFileSize(30),log.SetCompress(false))
+	log.Init("./log/server.log",log.DebugLevel,false,log.SetCaller(true),log.SetMaxFileSize(30),log.SetCompress(false))
 
 	//初始化 server
 	netListen, err := net.Listen("tcp", "0.0.0.0:"+port)

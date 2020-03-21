@@ -33,8 +33,10 @@ func HeardEvent(conn net.Conn,dst uint16) {
 		}
 
 		if errCount >3{
-			conn.Close()
-			//socketErr(conn)
+			if conn!=nil{
+				conn.Close()
+			}
+			ConnListDel(conn)
 		}
 	}
 

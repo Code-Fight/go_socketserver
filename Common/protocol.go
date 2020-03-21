@@ -5,7 +5,7 @@ import (
 )
 
 //封包
-//@param	allen	uint16	"除头部7个字节之外的所有的长度"
+//@param	allen	uint16	"除头部7个字节之外的所有的长度,也就是data的长度+10"
 func Packet(alllen uint32,src uint16, des uint16, cmd uint16,dataLen uint32,data []byte) []byte {
 	buffer := make([]byte, 0)
 	// *

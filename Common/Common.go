@@ -13,5 +13,3 @@ var (
 	//所有的在线用户
 	ConnList sync.Map
 )
-
-

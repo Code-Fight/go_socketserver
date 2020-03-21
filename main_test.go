@@ -1,12 +1,15 @@
 package main
 
 import (
-	"socketserver/units"
+	"strconv"
 	"testing"
 )
 
 func TestTemp(t *testing.T) {
-	i :=units.StringToBytesWithWidechar("192.168.102.100")
 
-	t.Logf("%x",i)
+	a,_:=strconv.ParseUint("CSQ",128,16)
+
+	//i :=units.StringToBytesWithWidechar("192.168.102.100")
+
+	t.Logf("%d",a)
 }

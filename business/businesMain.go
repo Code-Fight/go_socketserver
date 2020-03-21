@@ -20,7 +20,9 @@ func CMDRoute(conn net.Conn, data []byte ) {
 		// 检测是否设置src
 		if _,ok := Common.ConnList.Load(units.BytesToSrc(s.Data.Src));!ok{
 			log.Error("设备未注册")
-			conn.Close()
+			if conn!=nil{
+				conn.Close()
+			}
 		}
 	}
 
