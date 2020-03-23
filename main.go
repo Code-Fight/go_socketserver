@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
+	"github.com/Code-Fight/golog"
 	"net"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"socketserver/business"
 	"socketserver/socket"
-	"github.com/Code-Fight/golog"
 	"socketserver/units"
 )
 
@@ -34,7 +36,6 @@ func ErrorOnEvent(conn net.Conn) {
 func main() {
 	fmt.Println("Server Start!")
 	port:=units.GetPort()
-	fmt.Printf("Port:%s \r\n",port)
 
 
 	//初始化日志
@@ -42,11 +43,22 @@ func main() {
 	//设置日志分割大小为30M
 	log.Init("./log/server.log",log.DebugLevel,false,log.SetCaller(true),log.SetMaxFileSize(30),log.SetCompress(false))
 
+	go InitTcpServer(port)
+
+	fmt.Print("HTTP Server Running on port:16060\r\n")
+	httpErr:= http.ListenAndServe("0.0.0.0:16060", nil)
+	if httpErr!=nil{
+		fmt.Println("HTTP Server ERR:",httpErr.Error())
+	}
+
+}
+
+func InitTcpServer(port string) {
 	//初始化 server
 	netListen, err := net.Listen("tcp", "0.0.0.0:"+port)
 	CheckError(err)
 	defer netListen.Close()
-	fmt.Print("Server Running...\r\n")
+	fmt.Print("TCP Server Running on Port:",port+"\r\n")
 	log.Info("Waiting for clients")
 
 	socket.BusOnEvent = BusOnEvent
