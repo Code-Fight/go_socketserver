@@ -177,6 +177,8 @@ func distributionID(conn *socket.Conn,netConn *net.Conn) (n uint16, err error) {
 	conn.RECVConn = *netConn
 	conn.CMDConn = nil
 	Common.ConnList.Store(conn.DevId,conn)
+	// 保存对应关系 为快速定位
+	//Common.ConnListIp.Store(conn.RECVConn.RemoteAddr(),conn.DevId)
 
 
 	return conn.DevId,nil
