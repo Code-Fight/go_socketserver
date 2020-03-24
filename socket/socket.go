@@ -6,9 +6,10 @@ import (
 	"net"
 	"reflect"
 	"socketserver/Common"
+	"socketserver/units"
 )
 
-var BusOnEvent func(conn net.Conn,data []byte,closeChannel <-chan struct{})
+var BusOnEvent func(conn net.Conn,data []byte,closeChannel chan struct{})
 var ErrorOnEvent func(conn net.Conn)
 
 
@@ -16,7 +17,7 @@ var ErrorOnEvent func(conn net.Conn)
 
 
 
-func reader(conn net.Conn, readerChannel <-chan []byte, closeChannel <-chan struct{}) {
+func reader(conn net.Conn, readerChannel <-chan []byte, closeChannel chan struct{}) {
 	for {
 		select {
 		case data := <-readerChannel:
@@ -57,17 +58,18 @@ func HandleConnection(conn net.Conn, timeout int) {
 		n, err := conn.Read(buffer)
 		if err != nil {
 			if err == io.EOF {
-				continue
+				//对端关闭 对端发送了 FIN过来 请求关闭 这里注意TCP的半关闭
+				log.Infof("Client Closed!")
+
 			}
 			if opErr, ok := err.(*net.OpError); ok && opErr.Timeout() {
 				log.Errorf("TimeOut close client: %s:",opErr.Addr.String())
 			}
 			log.Error(conn.RemoteAddr().String(), " connection error: ", err, reflect.TypeOf(err))
 
-			//关闭reader goroutine
-			close(closeChannel)
 
-			socketErr(conn)
+
+			socketErr(conn,closeChannel)
 
 			return
 		}
@@ -78,6 +80,8 @@ func HandleConnection(conn net.Conn, timeout int) {
 }
 
 //处理socket链接异常
-func socketErr(conn net.Conn) {
+func socketErr(conn net.Conn,closeChannel chan struct{}) {
+	//关闭reader goroutine
+	units.SafeCloseChan(closeChannel)
 	ErrorOnEvent(conn)
 }

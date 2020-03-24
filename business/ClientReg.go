@@ -13,7 +13,7 @@ import (
 )
 
 // 设备注册
-func Reg(conn net.Conn, s *Common.MyProtocol,closeChannel <-chan struct{}) {
+func Reg(conn net.Conn, s *Common.MyProtocol,closeChannel chan struct{}) {
 
 	if units.BytesToSrc(s.Data.Src) == 0xffff {
 		c := socket.Conn{}
@@ -58,6 +58,9 @@ func Reg(conn net.Conn, s *Common.MyProtocol,closeChannel <-chan struct{}) {
 			//通知新上线的设备 存在哪些已在线的设备
 			GetAllOnlineDev(c.DevId)
 
+			//开启心跳
+			go HeardEvent(c.CMDConn,c.DevId,closeChannel)
+
 
 
 		} else {
@@ -101,10 +104,13 @@ func GetAllOnlineDev(CurrClientID uint16)  {
 
 						sendData := Common.Packet(uint32(len(data)+10),0x0000,CurrClientID, Common.Cmd_Net_Comm_Status,uint32(len(data)),data)
 						log.Debugf("GetAllDevs:%x",sendData)
-						_,ok :=CurrClient.RECVConn.Write(sendData)
-						if ok!=nil {
-							log.Error("发送数据失败：",ok.Error())
+						if CurrClient.RECVConn!=nil{
+							_,ok :=CurrClient.RECVConn.Write(sendData)
+							if ok!=nil {
+								log.Error("发送数据失败：",ok.Error())
+							}
 						}
+
 					}
 
 

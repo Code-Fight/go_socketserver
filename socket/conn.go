@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"errors"
 	"github.com/Code-Fight/golog"
 	"net"
 	"socketserver/Common"
@@ -19,11 +20,17 @@ type Conn struct {
 
 //给 client发送数据 通过客户端的收通道
 func (c Conn) WriteData(data []byte) (n int, err error) {
+	if c.RECVConn==nil{
+		return 0,errors.New("conn is nil")
+	}
 	return c.RECVConn.Write((data))
 }
 
 //给 client回复数据 通过客户端的发数据通道 只用来回复数据
 func (c Conn) ClientReply(data []byte) (n int, err error) {
+	if c.CMDConn==nil{
+		return 0,errors.New("conn is nil")
+	}
 	return c.CMDConn.Write((data))
 }
 
@@ -36,6 +43,9 @@ func (c Conn) ReplyDevId(conn net.Conn, devId uint16) (n int, err error) {
 	data[9] = d[0]
 	data[10] = d[1]
 
+	if conn==nil{
+		return 0,errors.New("conn is nil")
+	}
 	return conn.Write(data)
 }
 
@@ -92,5 +102,8 @@ func SendToAll(src uint16,cmd uint16,data []byte,tunnel int,devType uint16)  {
 
 // 发送数据给客户端
 func SendData(conn *net.Conn,data []byte) (n int, err error)  {
+	if (*conn)==nil{
+		return 0,errors.New("conn is nil")
+	}
 	return (*conn).Write(data)
 }

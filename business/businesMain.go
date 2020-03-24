@@ -9,7 +9,7 @@ import (
 )
 
 // 命令路由
-func CMDRoute(conn net.Conn, data []byte ,closeChannel <-chan struct{}) {
+func CMDRoute(conn net.Conn, data []byte ,closeChannel chan struct{}) {
 
 	if conn==nil{
 		ConnListDel(conn)
@@ -125,9 +125,15 @@ func ForwardToClient(conn *net.Conn,d *Common.MyProtocol,tunnel int) {
 
 
 		if tunnel== Common.RECVTASK {
-			c.RECVConn.Write(sendData)
+			if c.RECVConn !=nil{
+				c.RECVConn.Write(sendData)
+
+			}
 		}else {
-			c.CMDConn.Write(sendData)
+			if c.CMDConn!=nil{
+				c.CMDConn.Write(sendData)
+
+			}
 
 		}
 	}

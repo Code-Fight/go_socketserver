@@ -19,7 +19,7 @@ func CheckError(err error) {
 	}
 }
 
-func BusOnEvent(conn net.Conn,data []byte,closeChannel <-chan struct{})  {
+func BusOnEvent(conn net.Conn,data []byte,closeChannel chan struct{})  {
 	log.Debug("rev data from client:"+conn.RemoteAddr().String())
 	business.CMDRoute(conn,data,closeChannel)
 
@@ -41,7 +41,7 @@ func main() {
 	//初始化日志
 	//关闭日志压缩
 	//设置日志分割大小为30M
-	log.Init("./log/server.log",log.DebugLevel,false,log.SetCaller(true),log.SetMaxFileSize(30),log.SetCompress(false))
+	log.Init("./log/server.log",log.PanicLevel,false,log.SetCaller(true),log.SetMaxFileSize(30),log.SetCompress(false))
 
 	go InitTcpServer(port)
 

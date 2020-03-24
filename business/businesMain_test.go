@@ -7,7 +7,8 @@ import (
 func TestRoute(t *testing.T) {
 	//----------------------------------------------------------------------- 这里是命令
 	testData := []byte{0x2a,0x00,0x00,0x00,0x0a,0x00,0x00,0x00,0x00,0x00,0x10,0x10,0x04,0x00,0x00,0x00,0x00}
-	CMDRoute(nil,testData)
+	closeChannel :=make(chan struct{})
+	CMDRoute(nil,testData,closeChannel)
 
 
 }

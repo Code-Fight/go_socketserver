@@ -33,6 +33,7 @@ func main() {
 
 
 	for i := 0; i < *t; i++ {
+		time.Sleep(time.Millisecond)
 		go start(*ip)
 	}
 	for{
@@ -56,7 +57,7 @@ func start(ip string)  {
 	conn1, err1 := net.Dial("tcp", ip)
 
 	if err1 != nil {
-		fmt.Fprintf(os.Stderr, "Fatal error: %s", err.Error())
+		fmt.Printf("Fatal error: %s", err1.Error())
 		os.Exit(1)
 	}
 
@@ -103,7 +104,6 @@ func HandelCMDConn(conn net.Conn,id <-chan []byte)  {
 
 		//尝试接收数据
 		for {
-
 
 			n, err := conn.Read(buffer)
 

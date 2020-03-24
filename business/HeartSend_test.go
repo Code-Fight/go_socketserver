@@ -3,5 +3,6 @@ package business
 import "testing"
 
 func TestHeardEvent(t *testing.T) {
-	HeardEvent(nil,1)
+	testChan :=make(chan struct{})
+	HeardEvent(nil,1,testChan)
 }
