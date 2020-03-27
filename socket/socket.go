@@ -36,13 +36,11 @@ func reader(conn net.Conn, readerChannel <-chan []byte, closeChannel chan struct
 
 func HandleConnection(conn net.Conn, timeout int) {
 
-
-
 	//声明一个临时缓冲区，用来存储被截断的数据
 	var tmpBuffer []byte
 
 	//声明一个管道用于接收解包的数据
-	readerChannel := make(chan []byte, 16)
+	readerChannel := make(chan []byte, 100)
 
 	//goroutine关闭线程
 	closeChannel :=make(chan struct{})
@@ -51,7 +49,7 @@ func HandleConnection(conn net.Conn, timeout int) {
 	go reader(conn, readerChannel, closeChannel)
 
 	//最大4M的数据
-	buffer := make([]byte, 4096)
+	buffer := make([]byte, 4096*1000)
 
 	//尝试接收数据
 	for {
