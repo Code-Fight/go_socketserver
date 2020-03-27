@@ -34,14 +34,22 @@ func ErrorOnEvent(conn net.Conn) {
 
 
 func main() {
-	fmt.Println("Server Start!")
-	port:=units.GetPort()
 
+
+	//runtime.GOMAXPROCS()
+	fmt.Println("Server Start!")
+	units.ConfigInit()
+	port:=units.GetPort()
+	logLevel:=units.GetLog()
+	if logLevel!=log.ErrorLevel && logLevel!=log.DebugLevel  && logLevel!=log.InfoLevel  && logLevel!=log.PanicLevel && logLevel!=log.WarnLevel {
+		fmt.Println("the config log level error")
+		os.Exit(0)
+	}
 
 	//初始化日志
 	//关闭日志压缩
 	//设置日志分割大小为30M
-	log.Init("./log/server.log",log.PanicLevel,false,log.SetCaller(true),log.SetMaxFileSize(30),log.SetCompress(false))
+	log.Init("./log/server.log",logLevel,false,log.SetCaller(true),log.SetMaxFileSize(30),log.SetCompress(false))
 
 	go InitTcpServer(port)
 
@@ -68,6 +76,7 @@ func InitTcpServer(port string) {
 		if err != nil {
 			continue
 		}
+
 		log.Info(conn.RemoteAddr().String(), " tcp connect success")
 		// 如果此链接超过60秒没有发送新的数据，将被关闭
 		// 超时时间 这里需要注意 如果对方不发心跳 可能会被直接关闭
