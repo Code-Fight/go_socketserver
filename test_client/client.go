@@ -15,25 +15,24 @@ import (
 )
 var ip = flag.String("ip", "127.0.0.1:2048", "ip")
 var t = flag.Int("t", 10, "并发数量")
-
+var d = flag.Int("d", 10, "并发数量")
 func main() {
 
 	flag.Parse()
 
-	flag.Arg(0)
 
 	//初始化日志
 	//关闭日志压缩
 	//设置日志分割大小为30M
-	log.Init("./log/server.log",log.DebugLevel,false,log.SetCaller(true),log.SetMaxFileSize(30),log.SetCompress(false))
+	log.Init("./log/server.log",log.DebugLevel,false,log.SetCaller(true),log.SetMaxFileSize(1024),log.SetCompress(false),log.SetMaxBackups(10))
 
 
 	fmt.Println("服务器地址：",*ip)
 	fmt.Println("并发客户端：",*t)
 
-
 	for i := 0; i < *t; i++ {
-		time.Sleep(time.Millisecond)
+
+		time.Sleep(time.Millisecond*time.Duration(*d))
 		go start(*ip)
 	}
 	for{
@@ -43,12 +42,19 @@ func main() {
 }
 
 func start(ip string)  {
+
+	defer func() {
+		if err:= recover(); err != nil {
+			fmt.Println(err)
+		}
+	}()
+
 	idchan :=make(chan []byte,1)
 	conn, err := net.Dial("tcp", ip)
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Fatal error: %s", err.Error())
-		os.Exit(1)
+		//os.Exit(1)
 	}
 
 	fmt.Println(" HandelRECVConn connect success")
@@ -58,7 +64,7 @@ func start(ip string)  {
 
 	if err1 != nil {
 		fmt.Printf("Fatal error: %s", err1.Error())
-		os.Exit(1)
+		//os.Exit(1)
 	}
 
 	fmt.Println(" HandelRECVConn connect success")
@@ -79,11 +85,18 @@ func HandelCMDConn(conn net.Conn,id <-chan []byte)  {
 
 	go func() {
 		for{
-			time.Sleep(time.Second)
-			buff :=make([]byte,8)
+			time.Sleep(time.Second*60)
+			buff :=make([]byte,400*1024/10+100)
 			binary.LittleEndian.PutUint64(buff,uint64( time.Now().UnixNano()))
 			//加一堆扰乱数据
-			buff = append(buff, []byte{0x08,0x00,0x00,0x00,0x00,0x10,0x00,0x00,0x01,0x00,0x00,0x00,0x31,0x00,0x32,0x00,0x37,0x00,0x2e,0x00,0x30,0x00,0x2e,0x00,0x30,0x00,0x2e,0x00,0x31,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x04,0xa0,0x69,0x5e,0x00,0x00,0x00,0x00}...)
+			//buff = append(buff, []byte{0x08,0x00,0x00,0x00,0x00,0x10,0x00,0x00,0x01,0x00,0x00,0x00,0x31,0x00,0x32,0x00,0x37,0x00,0x2e,0x00,0x30,0x00,0x2e,0x00,0x30,0x00,0x2e,0x00,0x31,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x04,0xa0,0x69,0x5e,0x00,0x00,0x00,0x00}...)
+
+			for i := 0; i < 400*1024/10; i++ {
+				buff = append(buff,[]byte{0x08,0x00,0x00,0x00,0x00,0x10,0x00,0x00,0x01,0x00}...)
+			}
+
+
+
 			if units.BytesToSrc(clientid) -1>=uint16(4096){
 				conn.Write(Common.Packet(uint32(len(buff)+10),units.BytesToSrc(clientid),units.BytesToDes(clientid)-1,units.BytesToCmd([]byte{0x11,0x11}),uint32(len(buff)),buff))
 
@@ -191,7 +204,7 @@ func reader(conn net.Conn, readerChannel <-chan []byte, timeout int,idchan chan<
 				//解析data 然后对比时间
 				temp:= p.Data.Data[0:8]
 				c:=time.Now().UnixNano()-int64(binary.LittleEndian.Uint64(temp))
-				log.Infof("耗时(毫秒):%v \r\n",float64(c)/1000000)
+				log.Infof("%v \r\n",float64(c)/1000000)
 				//fmt.Printf()
 
 			}

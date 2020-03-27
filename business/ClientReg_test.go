@@ -11,6 +11,7 @@ import (
 func TestDistributionID(t *testing.T) {
 	testData :=socket.Conn{}
 	testData.DevType = Common.Dev_Type_UI
+	testData.ZBM = "test"
 
 	var wg sync.WaitGroup
 	wg.Add(1000)
@@ -26,9 +27,16 @@ func TestDistributionID(t *testing.T) {
 	wg.Wait()
 
 	index := 0
-	Common.ConnList.Range(func(key, value interface{}) bool {
+	Common.ClientList.Range(func(key, value interface{}) bool {
 		//t.Log(key)
-		index ++
+		vv:=value.(sync.Map)
+
+		vv.Range(func(key1, value1 interface{}) bool {
+			index ++
+			return true
+		})
+
+
 		return true
 	})
 	if index!=1000 {
