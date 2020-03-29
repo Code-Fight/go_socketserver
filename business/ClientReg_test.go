@@ -17,7 +17,6 @@ func TestDistributionID(t *testing.T) {
 	wg.Add(1000)
 	for i := 0;i<1000 ;i++  {
 		go func() {
-
 			temp :=net.Conn(nil)
 			distributionID(&testData,&temp)
 			wg.Done()

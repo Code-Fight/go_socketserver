@@ -13,7 +13,7 @@ import (
 func CMDRoute(conn net.Conn, data []byte, closeChannel chan struct{}) {
 
 	if conn == nil {
-		ConnListDel(conn)
+		ClientListDel(conn)
 	}
 	log.Debugf("收到%s 的数据包：%x", conn.RemoteAddr().String(), data)
 	var s = Common.MyProtocol{}

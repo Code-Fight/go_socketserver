@@ -42,7 +42,7 @@ func HeardEvent(conn net.Conn,dst uint16,closeChannel chan struct{}) {
 				if conn!=nil{
 					conn.Close()
 				}
-				ConnListDel(conn)
+				ClientListDel(conn)
 				return
 			}
 		}
