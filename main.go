@@ -29,14 +29,13 @@ func BusOnEvent(conn net.Conn,data []byte,closeChannel chan struct{})  {
 // 关闭所有相关的gorottine
 // 从在线列表中删除掉该设备
 func ErrorOnEvent(conn net.Conn) {
-	business.ConnListDel(conn)
+	business.ClientListDel(conn)
 }
 
 
 func main() {
 
 
-	//runtime.GOMAXPROCS()
 	fmt.Println("Server Start!")
 	units.ConfigInit()
 	port:=units.GetPort()

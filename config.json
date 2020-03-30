@@ -1,4 +1,4 @@
 {
   "port": 2048,
-  "log": "info"
+  "log": "debug"
 }

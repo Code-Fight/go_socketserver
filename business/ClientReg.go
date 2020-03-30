@@ -29,7 +29,7 @@ func Reg(conn net.Conn, s *Common.MyProtocol,closeChannel chan struct{}) {
 		c.ZBM = ZBM
 
 		//设备类型 从data中来
-		c.DevType = units.BytesToSrc(s.Data.Data)
+		c.DevType = units.BytesToSrc(s.Data.Data[:2])
 
 		//分配设备号 并创建socket Conn 添加到Clients中
 		_,disOk := distributionID(&c,&conn)
