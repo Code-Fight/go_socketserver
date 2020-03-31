@@ -7,9 +7,12 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"socketserver/Common"
 	"socketserver/business"
 	"socketserver/socket"
 	"socketserver/units"
+	"sync"
+	"time"
 )
 
 func CheckError(err error) {
@@ -44,6 +47,12 @@ func main() {
 		fmt.Println("the config log level error")
 		os.Exit(0)
 	}
+
+	// 如果是debug 开启一个打印方法
+	if logLevel==log.DebugLevel{
+		PrintClients()
+	}
+
 
 	//初始化日志
 	//关闭日志压缩
@@ -82,4 +91,35 @@ func InitTcpServer(port string) {
 		// 超时已经关闭 因为目前有的socket客户端并没有遵循发送心跳
 		go socket.HandleConnection(conn, 60)
 	}
+}
+
+func PrintClients() {
+	go func() {
+		for {
+			fmt.Println("================[ ", time.Now().String(), " ]================")
+
+			Common.ClientList.Range(func(roomKey, roomVal interface{}) bool {
+				room,_:=roomVal.(sync.Map)
+				fmt.Print("[ZBM] ",roomKey," [Clients] ")
+
+				room.Range(func(c, cVal interface{}) bool {
+					client,_:=cVal.(*socket.Conn)
+
+
+
+
+					fmt.Printf("%x  |  ",units.IntToBytes(client.DevId))
+					return true
+				})
+				fmt.Println("")
+				return true
+			})
+
+
+
+			fmt.Println("")
+			time.Sleep(time.Second * 5)
+		}
+	}()
+
 }
