@@ -113,6 +113,7 @@ func SendToRoom(src uint16,cmd uint16,data []byte,tunnel int,devType uint16, ZBM
 			return
 		}
 
+
 		RoomClient.Range(func(key, value interface{}) bool {
 
 			client,ok :=value.(*Conn)
@@ -127,24 +128,17 @@ func SendToRoom(src uint16,cmd uint16,data []byte,tunnel int,devType uint16, ZBM
 			}
 
 
-
 			if ok{
-				//单独为UI客户端进行处理一下转发的接收
-				//如果转发到UI客户端的 0x1fff 那么就发到客户端的recv
-				//只要是群发 就要发到客户端的recv上
-				//if client.DevType == Common.Dev_Type_UI  {
-				//	tunnel = Common.RECVTASK
-				//}
 
 				switch tunnel {
 				//CMDTASK
-				case 0:
+				case Common.SENDSOCKET:
 					if client.CMDConn !=nil{
 						client.CMDConn.Write(sendData)
 						log.Debugf("CMDConn sendAll：%x",sendData)
 					}
 				//RECVTASK
-				case 1:
+				case Common.RECVSOCKET:
 					if client.RECVConn !=nil{
 						client.RECVConn.Write(sendData)
 						log.Debugf("RECVConn sendAll：%x",sendData)

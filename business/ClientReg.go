@@ -44,12 +44,12 @@ func GetAllOnlineDev(CurrClientID uint16,ZBM string)  {
 						if client.DevId !=CurrClientID{
 							//_,_ :=key.(uint16)
 
-							data:=GenDevStatusBytes(uint32(client.DevId),uint32(client.DevType),1,strings.Split(client.RECVConn.RemoteAddr().String(),":")[0])
+							data:=GenDevStatusBytes(uint32(client.DevId),uint32(client.DevType),1,strings.Split(client.CMDConn.RemoteAddr().String(),":")[0])
 
 							sendData := Common.Packet(uint32(len(data)+10),0x0000,CurrClientID, Common.Cmd_Net_Comm_Status,uint32(len(data)),data)
 							log.Debugf("GetAllDevs:%x",sendData)
-							if CurrClient.RECVConn!=nil{
-								_,ok :=CurrClient.RECVConn.Write(sendData)
+							if CurrClient.CMDConn!=nil{
+								_,ok :=CurrClient.CMDConn.Write(sendData)
 								if ok!=nil {
 									log.Error("发送数据失败：",ok.Error())
 								}
@@ -145,8 +145,8 @@ func distributionID(conn *socket.Conn,netConn *net.Conn) (n uint16, err error) {
 
 
 	// 设置链接  保存到clients中
-	conn.RECVConn = *netConn
-	conn.CMDConn = nil
+	conn.RECVConn = nil
+	conn.CMDConn = *netConn
 
 	//保存链接
 	if zbmOK{
@@ -176,6 +176,8 @@ func Reg(conn net.Conn, s *Common.MyProtocol,closeChannel chan struct{}) {
 
 	ZBM:=units.BytesToString (s.Data.Data[2:])
 
+	//根据旧系统的代码
+	//0xffff为CMDTASK 否则为 RECVTASK
 	if units.BytesToSrc(s.Data.Src) == 0xffff {
 		c := socket.Conn{}
 		c.ZBM = ZBM
@@ -195,12 +197,15 @@ func Reg(conn net.Conn, s *Common.MyProtocol,closeChannel chan struct{}) {
 
 
 		//回复client ID
-		c.ReplyDevId(c.RECVConn,c.DevId)
+		c.ReplyDevId(c.CMDConn,c.DevId)
 
-		Common.ConnListIp.LoadOrStore(conn.RemoteAddr().String(),ZBM)
+		//存储ip和站报码的关系
+		Common.ConnListIp.Store(conn.RemoteAddr().String(),ZBM)
+		//存储ip和通道的关系
+		Common.ConnType.Store(conn.RemoteAddr().String(),Common.CMDTASK)
 
 		//给当前连接器一个心跳线程
-		go HeardEvent(c.RECVConn,c.DevId,closeChannel)
+		go HeardEvent(c.CMDConn,c.DevId,closeChannel)
 
 
 		return
@@ -216,21 +221,24 @@ func Reg(conn net.Conn, s *Common.MyProtocol,closeChannel chan struct{}) {
 			c, ok := roomClient.(*socket.Conn)
 
 			if ok {
-				c.CMDConn = conn
+				c.RECVConn = conn
 				//回复client ID
-				c.ReplyDevId(c.CMDConn,c.DevId)
+				c.ReplyDevId(c.RECVConn,c.DevId)
 
-				Common.ConnListIp.LoadOrStore(conn.RemoteAddr().String(),ZBM)
+				//存储ip和站报码的关系
+				Common.ConnListIp.Store(conn.RemoteAddr().String(),ZBM)
+				//存储ip和通道的关系
+				Common.ConnType.Store(conn.RemoteAddr().String(),Common.RECVTASK)
 
 				//通知所有设备有设备上线
 				statusBytes := GenDevStatusBytes(uint32(c.DevId),uint32(c.DevType),1,strings.Split(conn.RemoteAddr().String(),":")[0])
-				socket.SendToRoom(0x0000, Common.Cmd_Net_Comm_Status,statusBytes, Common.RECVTASK,0,ZBM)
+				socket.SendToRoom(0x0000, Common.Cmd_Net_Comm_Status,statusBytes, Common.SENDSOCKET,0,ZBM)
 
 				//通知新上线的设备 存在哪些已在线的设备
 				GetAllOnlineDev(c.DevId,ZBM)
 
 				//开启心跳
-				go HeardEvent(c.CMDConn,c.DevId,closeChannel)
+				go HeardEvent(c.RECVConn,c.DevId,closeChannel)
 
 
 

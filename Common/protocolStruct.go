@@ -10,8 +10,10 @@ import (
 // TCP通道作用 一个收 一个发
 // 客户端
 const (
-	CMDTASK int = 0
-	RECVTASK int = 1
+	CMDTASK int = 1
+	RECVTASK int = 0
+	SENDSOCKET int = 1
+	RECVSOCKET int = 0
 )
 
 // 设备类型

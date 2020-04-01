@@ -20,6 +20,8 @@ func CMDRoute(conn net.Conn, data []byte, closeChannel chan struct{}) {
 	s.Decode(data)
 	cmd := units.BytesToCmd(s.Data.Cmd)
 
+
+	var tunnel int=-1
 	if cmd != Common.Cmd_Login {
 		//如果不是设备注册
 		//TODO：检测是否设置src 暂时关闭，要不转发频率太高，造成大量锁竞争
@@ -29,6 +31,23 @@ func CMDRoute(conn net.Conn, data []byte, closeChannel chan struct{}) {
 		//		conn.Close()
 		//	}
 		//}
+
+		//获取链接通道类型
+		connTypeTemp,connTypeTempOk:=Common.ConnType.Load(conn.RemoteAddr().String())
+
+		if !connTypeTempOk{
+			return
+		}
+		connType,_:=connTypeTemp.(int)
+
+		//进行通道转换
+		var tunnelOk bool
+		tunnel,tunnelOk=TransferTunnel(connType,units.BytesToCmd(s.Data.Des),units.BytesToCmd(s.Data.Cmd))
+
+		if !tunnelOk{
+			// 如果通道不允许发送就直接返回
+			return
+		}
 	}
 
 	switch cmd {
@@ -55,23 +74,25 @@ func CMDRoute(conn net.Conn, data []byte, closeChannel chan struct{}) {
 		log.Debug("recv Cmd_Pwd_User")
 
 		ZBM, ok := Common.ConnListIp.Load((conn).RemoteAddr().String())
+
 		if ok {
 			ZBMString, _ := ZBM.(string)
-			ForwardToClient(&conn, &s, Common.CMDTASK, ZBMString)
+			ForwardToClient(&conn, &s, tunnel, ZBMString)
 		}
 
 	default:
 		log.Debugf("收到%s 的自定义命令：%x", conn.RemoteAddr().String(), s.Data.Cmd)
-		DESRoute(&conn, &s)
+		DESRoute(&conn, &s,tunnel)
 	}
 }
 
 // 目的地 路由
 // 进行广播 或者 转发
 // TODO:可以对链接进行是否合规检测，比如验证当前链接 是否在维护的在线列表中
-func DESRoute(conn *net.Conn, s *Common.MyProtocol) {
+func DESRoute(conn *net.Conn, s *Common.MyProtocol, tunnel int) {
 
 	des := units.BytesToDes(s.Data.Des)
+
 	switch des {
 	case 0x00:
 		log.Info("Send to ComServer, [PASS]")
@@ -81,8 +102,8 @@ func DESRoute(conn *net.Conn, s *Common.MyProtocol) {
 		ZBM, ok := Common.ConnListIp.Load((*conn).RemoteAddr().String())
 		if ok {
 			ZBMString, _ := ZBM.(string)
-			socket.SendToRoom(units.BytesToSrc(s.Data.Src), units.BytesToCmd(s.Data.Cmd), s.Data.Data, Common.RECVTASK, 0, ZBMString)
 
+			socket.SendToRoom(units.BytesToSrc(s.Data.Src), units.BytesToCmd(s.Data.Cmd), s.Data.Data, tunnel, 0, ZBMString)
 		}
 
 	case Common.Des_GB_ALL:
@@ -90,14 +111,14 @@ func DESRoute(conn *net.Conn, s *Common.MyProtocol) {
 		ZBM, ok := Common.ConnListIp.Load((*conn).RemoteAddr().String())
 		if ok {
 			ZBMString, _ := ZBM.(string)
-			socket.SendToRoom(units.BytesToSrc(s.Data.Src), units.BytesToCmd(s.Data.Cmd), s.Data.Data, Common.RECVTASK, Common.Dev_Type_GB, ZBMString)
+			socket.SendToRoom(units.BytesToSrc(s.Data.Src), units.BytesToCmd(s.Data.Cmd), s.Data.Data, tunnel, Common.Dev_Type_GB, ZBMString)
 		}
 	case Common.Des_UI_All:
 		log.Info("Send to UI_All")
 		ZBM, ok := Common.ConnListIp.Load((*conn).RemoteAddr().String())
 		if ok {
 			ZBMString, _ := ZBM.(string)
-			socket.SendToRoom(units.BytesToSrc(s.Data.Src), units.BytesToCmd(s.Data.Cmd), s.Data.Data, Common.RECVTASK, Common.Dev_Type_UI, ZBMString)
+			socket.SendToRoom(units.BytesToSrc(s.Data.Src), units.BytesToCmd(s.Data.Cmd), s.Data.Data, tunnel, Common.Dev_Type_UI, ZBMString)
 		}
 
 	default:
@@ -106,10 +127,12 @@ func DESRoute(conn *net.Conn, s *Common.MyProtocol) {
 		ZBM, ok := Common.ConnListIp.Load((*conn).RemoteAddr().String())
 		if ok {
 			ZBMString, _ := ZBM.(string)
-			ForwardToClient(conn, s, Common.RECVTASK, ZBMString)
+			ForwardToClient(conn, s, tunnel, ZBMString)
 		}
 	}
 }
+
+
 
 // 转发到客户端
 // 自动判断是否在线，如果在线就转发，不在线回复客户端
@@ -134,19 +157,22 @@ func ForwardToClient(conn *net.Conn, d *Common.MyProtocol, tunnel int, ZBM strin
 	if c, ok := client.(*socket.Conn); ok {
 		sendData := Common.Packet(uint32(10+len(d.Data.Data)), units.BytesToSrc(d.Data.Src), units.BytesToDes(d.Data.Des), units.BytesToCmd(d.Data.Cmd), uint32(len(d.Data.Data)), d.Data.Data)
 
-		//a :="*******************\r\n"+fmt.Sprintf("%s ForwardToClient: %x",(*conn).RemoteAddr().String(),sendData)+"\r\n"+fmt.Sprintf("SourceData:%x ",d.SourceData)
-
 		log.Debugf("%s ForwardToClient: %x", (*conn).RemoteAddr().String(), sendData)
-		//log.Printf("SourceData:%x ",d.SourceData)
-		//log.Println(a)
 
 		//单独为UI客户端进行处理一下转发的接收
 		//如果转发到UI客户端的 那么直接转发改链接的cmd通道
-		if c.DevType == Common.Dev_Type_UI {
-			tunnel = Common.CMDTASK
-		}
+		//if c.DevType == Common.Dev_Type_UI {
+		//	tunnel = Common.CMDTASK
+		//}
 
-		if tunnel == Common.RECVTASK {
+		//tunnel,tunnelOk:=TransferTunnel(connType,units.BytesToUint16( d.Data.Des),units.BytesToCmd(d.Data.Cmd))
+		//
+		//if !tunnelOk{
+		//	// 如果通道不允许发送就直接返回
+		//	return
+		//}
+
+		if tunnel == Common.RECVSOCKET {
 			if c.RECVConn != nil {
 				c.RECVConn.Write(sendData)
 
@@ -160,4 +186,34 @@ func ForwardToClient(conn *net.Conn, d *Common.MyProtocol, tunnel int, ZBM strin
 		}
 	}
 
+}
+
+// 参考旧代码来实现通道类型的转换
+// 为了兼容旧模式
+func TransferTunnel(connType int,des uint16,cmd uint16) (int, bool)  {
+	temp:=0
+	if connType == Common.SENDSOCKET{
+		temp = Common.RECVSOCKET
+	}else {
+		temp = Common.SENDSOCKET
+	}
+
+	if des==Common.Dev_Type_DX||des==Common.Dev_Type_YW{
+		temp = Common.SENDSOCKET
+	}
+
+	if cmd==0x1005{
+		//不知道做什么，看旧代码也没找到
+		return -1,false
+	}
+
+	if des==0x1fff||des ==0xffff||des==0x2fff{
+		if temp==Common.RECVSOCKET{
+			// 旧代码写的是：应答命令不能转发
+			log.Debug("应答命令不能转发")
+			return -1,false
+		}
+	}
+
+	return temp,true
 }
