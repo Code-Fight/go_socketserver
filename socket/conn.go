@@ -3,9 +3,9 @@ package socket
 import (
 	"errors"
 	"github.com/Code-Fight/golog"
+	"go_socketserver/Common"
+	"go_socketserver/units"
 	"net"
-	"socketserver/Common"
-	"socketserver/units"
 	"sync"
 )
 

@@ -1,115 +1,19 @@
 package business
 
-import "C"
+
 import (
 	"errors"
 	"fmt"
 	"github.com/Code-Fight/golog"
+	"go_socketserver/Common"
+	"go_socketserver/socket"
+	"go_socketserver/units"
 	"math"
 	"net"
-	"socketserver/Common"
-	"socketserver/socket"
-	"socketserver/units"
 	"strings"
 	"sync"
 )
 
-// 设备注册
-func Reg(conn net.Conn, s *Common.MyProtocol,closeChannel chan struct{}) {
-
-	if len(s.Data.Data)!=5{
-		log.Error("设备注册过程中，缺少数据")
-		return
-	}
-
-	ZBM:=units.BytesToString (s.Data.Data[2:])
-
-	if units.BytesToSrc(s.Data.Src) == 0xffff {
-		c := socket.Conn{}
-		c.ZBM = ZBM
-
-		//设备类型 从data中来
-		c.DevType = units.BytesToSrc(s.Data.Data[:2])
-
-		//分配设备号 并创建socket Conn 添加到Clients中
-		_,disOk := distributionID(&c,&conn)
-		if disOk!=nil{
-			if conn!=nil{
-				conn.Close()
-			}
-			log.Error("设备分配过程中失败:"+disOk.Error())
-			return
-		}
-
-
-		//回复client ID
-		c.ReplyDevId(c.RECVConn,c.DevId)
-
-		Common.ConnListIp.LoadOrStore(conn.RemoteAddr().String(),ZBM)
-
-		//给当前连接器一个心跳线程
-		go HeardEvent(c.RECVConn,c.DevId,closeChannel)
-
-
-		return
-	} else if tempRoom, ok := Common.ClientList.Load(ZBM); ok {
-
-		//首先判断是否存在房间号，然后判断改房间是否存在已经注册的RECV链接
-
-		room,_:=tempRoom.(sync.Map)
-
-		if roomClient,roomOk:=room.Load(units.BytesToSrc(s.Data.Src));roomOk{
-
-			// 自带设备号过来的连接  添加到 发送数据CMD通道
-			c, ok := roomClient.(*socket.Conn)
-
-			if ok {
-				c.CMDConn = conn
-				//回复client ID
-				c.ReplyDevId(c.CMDConn,c.DevId)
-
-				Common.ConnListIp.LoadOrStore(conn.RemoteAddr().String(),ZBM)
-
-				//通知所有设备有设备上线
-				statusBytes := GenDevStatusBytes(uint32(c.DevId),uint32(c.DevType),1,strings.Split(conn.RemoteAddr().String(),":")[0])
-				socket.SendToRoom(0x0000, Common.Cmd_Net_Comm_Status,statusBytes, Common.RECVTASK,0,ZBM)
-
-				//通知新上线的设备 存在哪些已在线的设备
-				GetAllOnlineDev(c.DevId,ZBM)
-
-				//开启心跳
-				go HeardEvent(c.CMDConn,c.DevId,closeChannel)
-
-
-
-			} else {
-				if conn!=nil{
-					conn.Close()
-				}
-				log.Error("设备注册过程中，未找到发送数据相关的接收通道")
-				return
-
-			}
-
-		}else {
-			log.Error("CMD通道注册失败")
-			if conn!=nil{
-				conn.Close()
-			}
-			return
-		}
-
-
-	} else {
-		// 没有带设备号 并 没有设置来源0xffff的 直接关闭
-		log.Error("设备没有申请设备id，以及设备未注册到clients中")
-		if conn!=nil{
-			conn.Close()
-		}
-		return
-	}
-
-}
 
 // 获取所有在线设备
 func GetAllOnlineDev(CurrClientID uint16,ZBM string)  {
@@ -260,3 +164,102 @@ func distributionID(conn *socket.Conn,netConn *net.Conn) (n uint16, err error) {
 
 	return conn.DevId,nil
 }
+
+
+// 设备注册
+func Reg(conn net.Conn, s *Common.MyProtocol,closeChannel chan struct{}) {
+
+	if len(s.Data.Data)!=5{
+		log.Error("设备注册过程中，缺少数据")
+		return
+	}
+
+	ZBM:=units.BytesToString (s.Data.Data[2:])
+
+	if units.BytesToSrc(s.Data.Src) == 0xffff {
+		c := socket.Conn{}
+		c.ZBM = ZBM
+
+		//设备类型 从data中来
+		c.DevType = units.BytesToSrc(s.Data.Data[:2])
+
+		//分配设备号 并创建socket Conn 添加到Clients中
+		_,disOk := distributionID(&c,&conn)
+		if disOk!=nil{
+			if conn!=nil{
+				conn.Close()
+			}
+			log.Error("设备分配过程中失败:"+disOk.Error())
+			return
+		}
+
+
+		//回复client ID
+		c.ReplyDevId(c.RECVConn,c.DevId)
+
+		Common.ConnListIp.LoadOrStore(conn.RemoteAddr().String(),ZBM)
+
+		//给当前连接器一个心跳线程
+		go HeardEvent(c.RECVConn,c.DevId,closeChannel)
+
+
+		return
+	} else if tempRoom, ok := Common.ClientList.Load(ZBM); ok {
+
+		//首先判断是否存在房间号，然后判断改房间是否存在已经注册的RECV链接
+
+		room,_:=tempRoom.(sync.Map)
+
+		if roomClient,roomOk:=room.Load(units.BytesToSrc(s.Data.Src));roomOk{
+
+			// 自带设备号过来的连接  添加到 发送数据CMD通道
+			c, ok := roomClient.(*socket.Conn)
+
+			if ok {
+				c.CMDConn = conn
+				//回复client ID
+				c.ReplyDevId(c.CMDConn,c.DevId)
+
+				Common.ConnListIp.LoadOrStore(conn.RemoteAddr().String(),ZBM)
+
+				//通知所有设备有设备上线
+				statusBytes := GenDevStatusBytes(uint32(c.DevId),uint32(c.DevType),1,strings.Split(conn.RemoteAddr().String(),":")[0])
+				socket.SendToRoom(0x0000, Common.Cmd_Net_Comm_Status,statusBytes, Common.RECVTASK,0,ZBM)
+
+				//通知新上线的设备 存在哪些已在线的设备
+				GetAllOnlineDev(c.DevId,ZBM)
+
+				//开启心跳
+				go HeardEvent(c.CMDConn,c.DevId,closeChannel)
+
+
+
+			} else {
+				if conn!=nil{
+					conn.Close()
+				}
+				log.Error("设备注册过程中，未找到发送数据相关的接收通道")
+				return
+
+			}
+
+		}else {
+			log.Error("CMD通道注册失败")
+			if conn!=nil{
+				conn.Close()
+			}
+			return
+		}
+
+
+	} else {
+		// 没有带设备号 并 没有设置来源0xffff的 直接关闭
+		log.Error("设备没有申请设备id，以及设备未注册到clients中")
+		if conn!=nil{
+			conn.Close()
+		}
+		return
+	}
+
+}
+

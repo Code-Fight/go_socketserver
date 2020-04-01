@@ -1,7 +1,7 @@
 package Common
 
 import (
-	"socketserver/units"
+	"go_socketserver/units"
 )
 
 //封包

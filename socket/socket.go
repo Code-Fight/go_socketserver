@@ -2,11 +2,11 @@ package socket
 
 import (
 	"github.com/Code-Fight/golog"
+	"go_socketserver/Common"
+	"go_socketserver/units"
 	"io"
 	"net"
 	"reflect"
-	"socketserver/Common"
-	"socketserver/units"
 )
 
 var BusOnEvent func(conn net.Conn,data []byte,closeChannel chan struct{})

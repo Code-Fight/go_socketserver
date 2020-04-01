@@ -3,11 +3,12 @@ package Common
 import (
 	"bytes"
 	"encoding/binary"
-	"socketserver/units"
+	"go_socketserver/units"
 	"time"
 )
 
 // TCP通道作用 一个收 一个发
+// 客户端
 const (
 	CMDTASK int = 0
 	RECVTASK int = 1

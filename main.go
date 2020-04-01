@@ -3,14 +3,14 @@ package main
 import (
 	"fmt"
 	"github.com/Code-Fight/golog"
+	"go_socketserver/Common"
+	"go_socketserver/business"
+	"go_socketserver/socket"
+	"go_socketserver/units"
 	"net"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
-	"socketserver/Common"
-	"socketserver/business"
-	"socketserver/socket"
-	"socketserver/units"
 	"sync"
 	"time"
 )
@@ -95,6 +95,7 @@ func InitTcpServer(port string) {
 
 func PrintClients() {
 	go func() {
+		time.Sleep(time.Second*10)
 		for {
 			fmt.Println("================[ ", time.Now().String(), " ]================")
 
