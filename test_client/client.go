@@ -8,8 +8,8 @@ import (
 	"io"
 	"net"
 	"os"
-	"socketserver/Common"
-	"socketserver/units"
+	"go_socketserver/Common"
+	"go_socketserver/units"
 	"time"
 
 )
