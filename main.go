@@ -38,6 +38,9 @@ func ErrorOnEvent(conn net.Conn) {
 
 func main() {
 
+	//注入版本信息
+	VersionInit()
+
 
 	fmt.Println("Server Start!")
 	units.ConfigInit()
@@ -57,7 +60,7 @@ func main() {
 	//初始化日志
 	//关闭日志压缩
 	//设置日志分割大小为30M
-	log.Init("./log/server.log",logLevel,false,log.SetCaller(true),log.SetMaxFileSize(30),log.SetCompress(false))
+	log.Init("./log/server.log",logLevel,false,log.SetMaxBackups(10),log.SetCaller(true),log.SetMaxFileSize(30),log.SetCompress(false))
 
 	go InitTcpServer(port)
 
@@ -100,7 +103,7 @@ func PrintClients() {
 			fmt.Println("================[ ", time.Now().String(), " ]================")
 
 			Common.ClientList.Range(func(roomKey, roomVal interface{}) bool {
-				room,_:=roomVal.(sync.Map)
+				room,_:=roomVal.(*sync.Map)
 				fmt.Print("[ZBM] ",roomKey," [Clients] ")
 
 				room.Range(func(c, cVal interface{}) bool {

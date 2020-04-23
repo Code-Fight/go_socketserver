@@ -17,7 +17,7 @@ func ClientListDel(conn net.Conn) {
 	if conn==nil{
 		//如果传入的conn不存在 那么执行删除空连接的方式
 		Common.ClientList.Range(func(zbm, zbmVal interface{}) bool {
-			room,zbmOk := zbmVal.(sync.Map)
+			room,zbmOk := zbmVal.(*sync.Map)
 
 			if !zbmOk {
 				return false
@@ -71,7 +71,7 @@ func ClientListDel(conn net.Conn) {
 		if !roomOk {
 			return
 		}
-		roomObj,_:=room.(sync.Map)
+		roomObj,_:=room.(*sync.Map)
 		roomObj.Range(func(key, value interface{}) bool {
 			c,ok := value.(*socket.Conn)
 

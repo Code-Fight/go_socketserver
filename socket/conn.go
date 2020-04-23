@@ -107,7 +107,7 @@ func SendToRoom(src uint16,cmd uint16,data []byte,tunnel int,devType uint16, ZBM
 
 	Room,roomOk:=Common.ClientList.Load(ZBM)
 	if  roomOk{
-		RoomClient,RoomClientOk:=Room.(sync.Map)
+		RoomClient,RoomClientOk:=Room.(*sync.Map)
 
 		if !RoomClientOk{
 			return

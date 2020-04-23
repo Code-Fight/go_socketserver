@@ -142,7 +142,7 @@ func ForwardToClient(conn *net.Conn, d *Common.MyProtocol, tunnel int, ZBM strin
 	if !roonOk {
 
 	}
-	roomClients, _ := room.(sync.Map)
+	roomClients, _ := room.(*sync.Map)
 
 	//判断是否在线
 	client, ok := roomClients.Load(units.BytesToDes(d.Data.Des))

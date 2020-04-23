@@ -28,7 +28,7 @@ func TestDistributionID(t *testing.T) {
 	index := 0
 	Common.ClientList.Range(func(key, value interface{}) bool {
 		//t.Log(key)
-		vv:=value.(sync.Map)
+		vv:=value.(*sync.Map)
 
 		vv.Range(func(key1, value1 interface{}) bool {
 			index ++
