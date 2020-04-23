@@ -48,8 +48,8 @@ func HandleConnection(conn net.Conn, timeout int) {
 	//实际业务
 	go reader(conn, readerChannel, closeChannel)
 
-	//最大4M的数据
-	buffer := make([]byte, 4096*1000)
+	
+	buffer := make([]byte, 1500)
 
 	//尝试接收数据
 	for {

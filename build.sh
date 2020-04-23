@@ -1,10 +1,10 @@
 #当前版本号,每次更新服务时都必须更新版本号
-CurrentVersion=0.1.0
+CurrentVersion=0.1.1
 #项目名
 Project=PSSocketServer
 
 #编译目标平台 (windows,linux...)
-targetGOOS=darwin
+targetGOOS=windows
 targetGOARCH=amd64
 
 #二进制生成文件存放路径
