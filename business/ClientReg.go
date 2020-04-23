@@ -21,7 +21,7 @@ func GetAllOnlineDev(CurrClientID uint16,ZBM string)  {
 
 	Room,roomOk:=Common.ClientList.Load(ZBM)
 	if  roomOk {
-		RoomClient,RoomClientOk:=Room.(sync.Map)
+		RoomClient,RoomClientOk:=Room.(*sync.Map)
 
 		if !RoomClientOk{
 			return
@@ -99,7 +99,7 @@ func distributionID(conn *socket.Conn,netConn *net.Conn) (n uint16, err error) {
 
 		//如果找到相应的房间
 		if zbmOK{
-			zbmCliecnts,_:=zbmClients.(sync.Map)
+			zbmCliecnts,_:=zbmClients.(*sync.Map)
 			_,ok :=zbmCliecnts.Load(conn.DevType)
 			if ok{
 				return 0,errors.New(fmt.Sprintf("%x,该设备已经在线，不能重复登录.",conn.DevType))
@@ -118,7 +118,7 @@ func distributionID(conn *socket.Conn,netConn *net.Conn) (n uint16, err error) {
 		//如果找到相应的房间
 		if zbmOK{
 
-			zbmCliecnts,_:=zbmClients.(sync.Map)
+			zbmCliecnts,_:=zbmClients.(*sync.Map)
 			//roomClient,ok :=zbmCliecnts.Load(conn.DevType)
 			clientId := uint16(4096)
 			for{
@@ -132,6 +132,8 @@ func distributionID(conn *socket.Conn,netConn *net.Conn) (n uint16, err error) {
 				}
 				clientId++
 			}
+		}else {
+			conn.DevId = 0x1000
 		}
 
 
@@ -151,14 +153,14 @@ func distributionID(conn *socket.Conn,netConn *net.Conn) (n uint16, err error) {
 	//保存链接
 	if zbmOK{
 		//存在房间，保存到房间中
-		zbmCliecnts,_:=zbmClients.(sync.Map)
+		zbmCliecnts,_:=zbmClients.(*sync.Map)
 		zbmCliecnts.Store(conn.DevId,conn)
 
 	}else {
 		//房间不存在 创建房间 并保存
 		room :=sync.Map{}
 		room.Store(conn.DevId,conn)
-		Common.ClientList.Store(conn.ZBM,room)
+		Common.ClientList.Store(conn.ZBM,&room)
 	}
 
 
@@ -213,7 +215,7 @@ func Reg(conn net.Conn, s *Common.MyProtocol,closeChannel chan struct{}) {
 
 		//首先判断是否存在房间号，然后判断改房间是否存在已经注册的RECV链接
 
-		room,_:=tempRoom.(sync.Map)
+		room,_:=tempRoom.(*sync.Map)
 
 		if roomClient,roomOk:=room.Load(units.BytesToSrc(s.Data.Src));roomOk{
 
