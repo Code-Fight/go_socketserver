@@ -22,9 +22,9 @@ func CheckError(err error) {
 	}
 }
 
-func BusOnEvent(conn net.Conn,data []byte,closeChannel chan struct{})  {
-	log.Debug("rev data from client:"+conn.RemoteAddr().String())
-	business.CMDRoute(conn,data,closeChannel)
+func BusOnEvent(conn net.Conn, data []byte, closeChannel chan struct{}) {
+	log.Debug("rev data from client:" + conn.RemoteAddr().String())
+	business.CMDRoute(conn, data, closeChannel)
 
 }
 
@@ -35,39 +35,36 @@ func ErrorOnEvent(conn net.Conn) {
 	business.ClientListDel(conn)
 }
 
-
 func main() {
 
 	//注入版本信息
-	VersionInit()
-
+	//VersionInit()
 
 	fmt.Println("Server Start!")
 	units.ConfigInit()
-	port:=units.GetPort()
-	logLevel:=units.GetLog()
-	if logLevel!=log.ErrorLevel && logLevel!=log.DebugLevel  && logLevel!=log.InfoLevel  && logLevel!=log.PanicLevel && logLevel!=log.WarnLevel {
+	port := units.GetPort()
+	logLevel := units.GetLog()
+	if logLevel != log.ErrorLevel && logLevel != log.DebugLevel && logLevel != log.InfoLevel && logLevel != log.PanicLevel && logLevel != log.WarnLevel {
 		fmt.Println("the config log level error")
 		os.Exit(0)
 	}
 
 	// 如果是debug 开启一个打印方法
-	if logLevel==log.DebugLevel{
+	if logLevel == log.DebugLevel {
 		PrintClients()
 	}
-
 
 	//初始化日志
 	//关闭日志压缩
 	//设置日志分割大小为30M
-	log.Init("./log/server.log",logLevel,false,log.SetMaxBackups(10),log.SetCaller(true),log.SetMaxFileSize(30),log.SetCompress(false))
+	log.Init("./log/server.log", logLevel, false, log.SetMaxBackups(10), log.SetCaller(true), log.SetMaxFileSize(30), log.SetCompress(false))
 
 	go InitTcpServer(port)
 
 	fmt.Print("HTTP Server Running on port:16060\r\n")
-	httpErr:= http.ListenAndServe("0.0.0.0:16060", nil)
-	if httpErr!=nil{
-		fmt.Println("HTTP Server ERR:",httpErr.Error())
+	httpErr := http.ListenAndServe("0.0.0.0:16060", nil)
+	if httpErr != nil {
+		fmt.Println("HTTP Server ERR:", httpErr.Error())
 	}
 
 }
@@ -77,7 +74,7 @@ func InitTcpServer(port string) {
 	netListen, err := net.Listen("tcp", "0.0.0.0:"+port)
 	CheckError(err)
 	defer netListen.Close()
-	fmt.Print("TCP Server Running on Port:",port+"\r\n")
+	fmt.Print("TCP Server Running on Port:", port+"\r\n")
 	log.Info("Waiting for clients")
 
 	socket.BusOnEvent = BusOnEvent
@@ -98,28 +95,23 @@ func InitTcpServer(port string) {
 
 func PrintClients() {
 	go func() {
-		time.Sleep(time.Second*10)
+		time.Sleep(time.Second * 10)
 		for {
 			fmt.Println("================[ ", time.Now().String(), " ]================")
 
 			Common.ClientList.Range(func(roomKey, roomVal interface{}) bool {
-				room,_:=roomVal.(*sync.Map)
-				fmt.Print("[ZBM] ",roomKey," [Clients] ")
+				room, _ := roomVal.(*sync.Map)
+				fmt.Print("[ZBM] ", roomKey, " [Clients] ")
 
 				room.Range(func(c, cVal interface{}) bool {
-					client,_:=cVal.(*socket.Conn)
+					client, _ := cVal.(*socket.Conn)
 
-
-
-
-					fmt.Printf("%x  |  ",units.IntToBytes(client.DevId))
+					fmt.Printf("%x  |  ", units.IntToBytes(client.DevId))
 					return true
 				})
 				fmt.Println("")
 				return true
 			})
-
-
 
 			fmt.Println("")
 			time.Sleep(time.Second * 5)

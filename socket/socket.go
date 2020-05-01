@@ -48,7 +48,7 @@ func HandleConnection(conn net.Conn, timeout int) {
 	//实际业务
 	go reader(conn, readerChannel, closeChannel)
 
-	
+
 	buffer := make([]byte, 1500)
 
 	//尝试接收数据

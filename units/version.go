@@ -1,4 +1,4 @@
-package main
+package units
 
 import (
 	"flag"
@@ -22,7 +22,7 @@ func FullVersion() string {
 		Version, GitCommit, GoVersion, BuildTime)
 }
 
-func VersionInit() {
+func init() {
 	showVersion := flag.Bool("v", false, "current version")
 	flag.Parse()
 	if *showVersion == true {
